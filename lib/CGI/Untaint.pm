@@ -19,6 +19,7 @@ CGI::Untaint - process CGI input parameters
 
   my $postcode = $handler->extract(-as_postcode => 'address6');
 
+  # Create your own handler...
 
   package MyRecipes::CGI::Untaint::legal_age;
   use base 'CGI::Untaint::integer';
@@ -53,7 +54,7 @@ use Carp;
 use UNIVERSAL::require;
 
 use vars qw/$VERSION/;
-$VERSION = '0.08';
+$VERSION = '0.09';
 
 =head2 new
 
@@ -267,6 +268,23 @@ call
 
   my $number = $handler->extract(-as_like_digit => 'value');
 
+=head1 AVAILABLE HANDLERS
+
+This package comes with two very simplistic handlers: 'integer' and
+'printable'. To really make this work for you you either need to write, 
+or download from CPAN, other handlers. Currently available handlers from
+CPAN include:
+
+  CGI::Untaint::creditcard
+  CGI::Untaint::date
+  CGI::Untaint::email
+  CGI::Untaint::uk_postcode
+  CGI::Untaint::url
+
+If you create any others, please let me know and I'll include them here.
+(Or, if you have requests for other handlers, let me know and I'll see
+if I can create them).
+
 =head1 BUGS
 
 None known yet.
@@ -278,6 +296,11 @@ L<CGI>. L<perlsec>.
 =head1 AUTHOR
 
 Tony Bowden, E<lt>kasei@tmtm.comE<gt>.
+
+=head1 FEEDBACK
+
+I'd love to hear from you if you start using this. I'd particularly like
+to hear any suggestions as to how to make it even better / easier etc.
 
 =head1 COPYRIGHT
 
