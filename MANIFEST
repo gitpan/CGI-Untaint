@@ -1,5 +1,6 @@
 Changes
 lib/CGI/Untaint.pm
+lib/CGI/Untaint/hex.pm
 lib/CGI/Untaint/integer.pm
 lib/CGI/Untaint/object.pm
 lib/CGI/Untaint/printable.pm

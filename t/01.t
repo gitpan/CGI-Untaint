@@ -1,31 +1,46 @@
 #!/usr/bin/perl -w
 
-use Test::More tests => 5;
+use Test::More tests => 19;
 
 use strict;
 use CGI;
 use CGI::Untaint;
 
-my $i_name = "Tony Bowden";
-my $i_age  = 110;
-my $i_neg  = -10;
+my $data = {
+  name => "Tony Bowden",
+  age  => 110,
+  neg  => -10,
+  hex  => "a15b",
+};
 
-my $q = CGI->new({
-  name => $i_name, 
-  age  => $i_age,
-  neg  => $i_neg,
-});
+my %type = (
+  name => 'printable',
+  age  => 'integer',
+  neg  => 'integer',
+  hex  => 'hex',
+);
 
-ok(my $data = CGI::Untaint->new( $q->Vars ), "Can create the handler");
 
-my $name   = $data->extract(-as_printable => 'name');
-my $age    = $data->extract(-as_integer   => 'age');
-my $neg    = $data->extract(-as_integer   => 'neg');
+{
+  my $q = CGI->new($data);
+  ok my $h = CGI::Untaint->new( $q->Vars ), "Create the handler";
+  isa_ok $h, "CGI::Untaint";
+  foreach (keys %type) {
+    ok my $res = $h->extract("-as_$type{$_}" => $_), "Extract $_";
+    is $res,  $data->{$_}, " - Correct value";
+    is $h->error, '', "No error";
+  }
+  my $foo = $h->extract(-as_printable => 'foo');
+  ok !$foo, "No Foo";
+  is $h->error, "No parameter for 'foo'", "No error";
+}
 
-is($name,  $i_name, "Name");
-is($age,   $i_age,  "Age");
-is($neg,   $i_neg,  "Negative integer");
-
-my $foo = $data->extract(-as_printable => 'foo');
-ok(!$foo, "No Foo");
+{
+  local $data->{hex} = "a15g";
+  my $q = CGI->new($data);
+  ok my $h = CGI::Untaint->new( $q->Vars ), "Create the handler";
+  my $hex = $h->extract(-as_hex => 'hex');
+  ok !$hex, "Invalid hex";
+  like $h->error, qr/does not untaint with default pattern/, $h->error;
+}
 

@@ -1,5 +1,8 @@
 package CGI::Untaint;
 
+use vars qw/$VERSION/;
+$VERSION = '0.83';
+
 =head1 NAME 
 
 CGI::Untaint - process CGI input parameters
@@ -52,9 +55,6 @@ guaranteed not only to be valid, but also untainted.
 use strict;
 use Carp;
 use UNIVERSAL::require;
-
-use vars qw/$VERSION/;
-$VERSION = '0.8';
 
 =head2 new
 
@@ -150,7 +150,7 @@ sub extract {
   #----------------------------------------------------------------------
   $self->{value} = $self->{$field};
   unless (defined $self->{value}) {
-    $self->{_ERR} = "No paramter for '$field'";
+    $self->{_ERR} = "No parameter for '$field'";
     return;
   } 
 
@@ -209,7 +209,7 @@ sub _load_module {
   my $name = $self->_get_module_name(shift());
   return $self->{__loaded}{$name} if defined $self->{__loaded}{$name};
 
-  eval { $name->require };
+  eval { $name->require or die };
   return $self->{__loaded}{$name} = $name unless $@;
 
   # Do we have an alternate path?
@@ -270,14 +270,19 @@ call
 
 =head1 AVAILABLE HANDLERS
 
-This package comes with two very simplistic handlers: 'integer' and
-'printable'. To really make this work for you you either need to write, 
-or download from CPAN, other handlers. Currently available handlers from
-CPAN include:
+This package comes with the following simplistic handlers: 
+
+  printable  - a printable string
+  integer    - an integer
+  hex        - a hexadecimal number (as a string)
+
+To really make this work for you you either need to write, or download
+from CPAN, other handlers. Currently available handlers from CPAN include:
 
   CGI::Untaint::creditcard
   CGI::Untaint::date
   CGI::Untaint::email
+  CGI::Untaint::isbn
   CGI::Untaint::uk_postcode
   CGI::Untaint::url
 
