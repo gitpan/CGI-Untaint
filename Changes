@@ -1,40 +1,43 @@
 Revision history for Perl extension CGI::Untaint.
 
-0.84  Feb 1, 2002
-        - deal better with Apache::Table
+0.9   February 5, 2003
+				- handle Apache::Table better when we have no config hash
+					(thanks to domm)
+        - better portability
+				- reference Test::CGI::Untaint
 
-0.83  Jan 27, 2002
+0.83  January 27, 2002
         - cope with UNIVERSAL::require API change
 
-0.82  Dec 16, 2001
+0.82  December 16, 2001
         - add reference to CGI::Untaint::isbn
 
-0.81  Dec 8, 2001
+0.81  December 8, 2001
         - add 'hex' pattern
         - fix spelling of parameter in error message
 
-0.8   Nov 28, 2001
+0.8   November 28, 2001
         - make tests work with latest Test::More
 
-0.09  Nov 10, 2001
+0.09  November 10, 2001
         - list available handlers from CPAN
 
-0.08  Nov 9, 2001
+0.08  November 9, 2001
         - empty values always extract OK
 
-0.07  Oct 5, 2001
+0.07  October 5, 2001
         - value is now settable in the validation routine
         - untainting now works properly
 
-0.05  Aug 23, 2001
+0.05  August 23, 2001
 	      - added the ability to specify an INCLUDE_PATH
 	      - fixed bug in (undocumented) credit_card handler
 	      - added 'printable'
 
-0.02  Aug 22, 2001
+0.02  August 22, 2001
 	      - added 'postcode'
 
-0.01  Jun 2001
+0.01  June 2001
 	      - original version
 
 

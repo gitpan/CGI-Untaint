@@ -1,7 +1,7 @@
 package CGI::Untaint;
 
 use vars qw/$VERSION/;
-$VERSION = '0.84';
+$VERSION = '0.90';
 
 =head1 NAME 
 
@@ -14,8 +14,8 @@ CGI::Untaint - process CGI input parameters
   my $q = new CGI;
   my $handler = CGI::Untaint->new( $q->Vars );
   my $handler2 = CGI::Untaint->new({
-    INCLUDE_PATH => 'MyRecipes',
-  }, $apr->parms );
+		INCLUDE_PATH => 'MyRecipes',
+	}, $apr->parms);
 
   my $name     = $handler->extract(-as_printable => 'name');
   my $homepage = $handler->extract(-as_url => 'homepage');
@@ -60,15 +60,14 @@ use UNIVERSAL::require;
 
   my $handler  = CGI::Untaint->new( $q->Vars );
   my $handler2 = CGI::Untaint->new({
-    INCLUDE_PATH => 'MyRecipes',
-  }, $apr->parms);
+		INCLUDE_PATH => 'MyRecipes',
+	}, $apr->parms);
 
 The simplest way to contruct an input handler is to pass a hash of
-parameters (usually $q->Vars, or $apr->parms, but this can be any hash
-or hash-like thing that you want) to new(). Each parameter will then be
-able to be extracted later by calling an extract() method on it.
+parameters (usually $q->Vars) to new(). Each parameter will then be able
+to be extracted later by calling an extract() method on it.
 
-You may also pass a leading reference to a hash of configuration
+However, you may also pass a leading reference to a hash of configuration
 variables.
 
 Currently the only such variable supported is 'INCLUDE_PATH', which
@@ -82,21 +81,25 @@ sub new {
 
   # want to cope with any of:
   #  (%vals), (\%vals), (\%config, %vals) or (\%config, \%vals)
+  #    but %vals could also be an object ...
   my ($vals, $config);
 
-  if (ref $_[0]  eq 'HASH') {
-    if (!$_[1]) {
-      $vals   = shift;
-    } elsif (ref $_[1]) {
-      $config = shift;
-      $vals   = { %{shift()} };
-    } else {
-      $config = shift;
-      $vals   = {@_};
-    }
-  } else {
-      $vals   = {@_};
-  }
+	croak "Need some arguments" unless @_;
+
+	if (@_ == 1) {
+		# only one argument - must be either hashref or obj.
+		$vals = ref $_[0] eq "HASH" ? shift : { %{+shift} }
+
+	} elsif (@_ > 2) {
+		# Conf + Hash or Hash
+		$config = shift if ref $_[0] eq "HASH";
+		$vals={ @_ }
+
+	} else {
+		# Conf + Hashref or 1 key hash
+		ref $_[0] eq "HASH" ? ($config, $vals) = @_ : $vals = {@_};
+	}
+		
   $vals->{__config} = $config;
   bless $vals, $class;
 }
@@ -269,6 +272,12 @@ call
 
   my $number = $handler->extract(-as_like_digit => 'value');
 
+=head2 Test::CGI::Untaint
+
+If you create your own local handlers, then you may wish to explore
+L<Test::CGI::Untaint>, available from the CPAN. This makes it very easy
+to write tests for your handler. (Thanks to Profero Ltd.)
+
 =head1 AVAILABLE HANDLERS
 
 This package comes with the following simplistic handlers: 
@@ -297,7 +306,7 @@ None known yet.
 
 =head1 SEE ALSO
 
-L<CGI>. L<perlsec>.
+L<CGI>. L<perlsec>. L<Test::CGI::Untaint>.
 
 =head1 AUTHOR
 
@@ -310,7 +319,7 @@ to hear any suggestions as to how to make it even better / easier etc.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2001 Tony Bowden. All rights reserved.
+Copyright (C) 2001-2003 Tony Bowden. All rights reserved.
 
 This module is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

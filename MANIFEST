@@ -7,5 +7,6 @@ lib/CGI/Untaint/printable.pm
 MANIFEST
 Makefile.PL
 t/01.t
+t/apache.t
 t/mypath.t
 t/printable.t

@@ -1,31 +1,37 @@
 #!/usr/bin/perl -w
 
 use strict;
+use Test::More;
 use File::Basename;
 use File::Path;
+use File::Spec;
 use CGI;
 use CGI::Untaint;
-use vars qw/$TESTS/;
-BEGIN { $TESTS = 12 };
-use Test::More tests => $TESTS;
 
-eval {
-  require File::Temp;
-};
-SKIP: {
-  skip "Need File::Temp", $TESTS if $@;
-  File::Temp->import(qw/tempfile tempdir/);
+BEGIN {
+  eval { require File::Temp; };
+  plan skip_all => 'File::Temp not installed' if $@;
+}
 
+plan tests => 12;
+
+File::Temp->import(qw/tempfile tempdir/);
+
+{
   my $dir = tempdir( CLEANUP => 1 );
   push @INC, $dir;
-  my $loc = "$dir/CGI/Untaint";
+
+	my $loc = File::Spec->catfile($dir, qw/CGI Untaint/);
   mkpath($loc) or die "Can't create path: $!\n";
   ok(-d $loc, "We have a path for our file");
   
   my ($fh, $filename) = tempfile( "TestXXXX", DIR => $loc, SUFFIX => '.pm');
 
   my $package = substr(basename($filename), 0, -3);
-  is ("$loc/$package.pm", $filename, "Package $loc/$package.pm OK"); 
+	is(
+		File::Spec->catfile($loc => "$package.pm"),
+		File::Spec->canonpath($filename), "Package $loc/$package.pm OK"
+	);
 
   my $string = "package CGI::Untaint::$package;\n";
      $string .= <<'';
