@@ -1,5 +1,9 @@
 Revision history for Perl extension CGI::Untaint.
 
+1.25  December 27 2004
+        - add test to make sure that false values which don't pass the
+          regex test are handled correctly [Mark Fowler]
+
 1.24  December 27 2004
         - Correctly handle false values [reported by Mark Fowler]
 
@@ -9,6 +13,7 @@ Revision history for Perl extension CGI::Untaint.
 
 1.22  December 27 2004
         - store raw data in sub-hash, rather than direct in object
+        - clean out lots of obsolete code
 
 1.21  December 27 2004
         - document the error() method [Mark Fowler]
