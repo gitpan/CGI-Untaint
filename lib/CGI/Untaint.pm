@@ -1,7 +1,7 @@
 package CGI::Untaint;
 
 use vars qw/$VERSION/;
-$VERSION = '0.83';
+$VERSION = '0.84';
 
 =head1 NAME 
 
@@ -14,8 +14,8 @@ CGI::Untaint - process CGI input parameters
   my $q = new CGI;
   my $handler = CGI::Untaint->new( $q->Vars );
   my $handler2 = CGI::Untaint->new({
-    INCLUDE_PATH = 'MyRecipes',
-  }, $q->Vars );
+    INCLUDE_PATH => 'MyRecipes',
+  }, $apr->parms );
 
   my $name     = $handler->extract(-as_printable => 'name');
   my $homepage = $handler->extract(-as_url => 'homepage');
@@ -60,14 +60,15 @@ use UNIVERSAL::require;
 
   my $handler  = CGI::Untaint->new( $q->Vars );
   my $handler2 = CGI::Untaint->new({
-    INCLUDE_PATH = 'MyRecipes',
-  }, $q->Vars);
+    INCLUDE_PATH => 'MyRecipes',
+  }, $apr->parms);
 
 The simplest way to contruct an input handler is to pass a hash of
-parameters (usually $q->Vars) to new(). Each parameter will then be able
-to be extracted later by calling an extract() method on it.
+parameters (usually $q->Vars, or $apr->parms, but this can be any hash
+or hash-like thing that you want) to new(). Each parameter will then be
+able to be extracted later by calling an extract() method on it.
 
-However, you may also pass a leading reference to a hash of configuration
+You may also pass a leading reference to a hash of configuration
 variables.
 
 Currently the only such variable supported is 'INCLUDE_PATH', which
@@ -80,15 +81,15 @@ sub new {
   my $class = shift;
 
   # want to cope with any of:
-  #  (%vals), (\%vals), (\%config, %vals) or (\%config, %\vals)
+  #  (%vals), (\%vals), (\%config, %vals) or (\%config, \%vals)
   my ($vals, $config);
 
-  if (ref($_[0]) eq 'HASH') {
+  if (ref $_[0]  eq 'HASH') {
     if (!$_[1]) {
-      $vals   = shift();
-    } elsif (ref($_[1]) eq 'HASH') {
+      $vals   = shift;
+    } elsif (ref $_[1]) {
       $config = shift;
-      $vals   = shift();
+      $vals   = { %{shift()} };
     } else {
       $config = shift;
       $vals   = {@_};
