@@ -50,13 +50,13 @@ sub is_valid { (1 x shift->value) !~ /^1?$|^(11+?)\1+$/ };
   is($data->{__config}{INCLUDE_PATH}, $dir, "INCLUDE_PATH set");
 
   is($data->extract("-as_like_$package" => 'ok'),  6, '6 passes');
-  is($data->error, undef, "And we have no errors");
+  ok(!$data->error, "And we have no errors");
   ok(!$data->extract("-as_like_$package" => 'not'), '10 fails');
   is($data->error, "not (10) does not untaint with default pattern", 
      " - with suitable error");
 
   is($data->extract("-as_$package" => 'prime'), 7, '7 passes prime test');
-  is($data->error, undef, "And we have no errors");
+  ok(!$data->error, "And we have no errors");
 
   ok(!$data->extract("-as_$package" => 'notprime'), '8 fails prime test');
   is($data->error, 'notprime (8) does not pass the is_valid() check',

@@ -1,5 +1,8 @@
 Revision history for Perl extension CGI::Untaint.
 
+0.8   November 28, 2001
+        - make tests work with latest Test::More
+
 0.09  November 10, 2001
         - list available handlers from CPAN
 

@@ -54,7 +54,7 @@ use Carp;
 use UNIVERSAL::require;
 
 use vars qw/$VERSION/;
-$VERSION = '0.09';
+$VERSION = '0.8';
 
 =head2 new
 
