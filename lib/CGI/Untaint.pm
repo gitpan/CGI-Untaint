@@ -53,7 +53,7 @@ use Carp;
 use UNIVERSAL::require;
 
 use vars qw/$VERSION/;
-$VERSION = '0.07';
+$VERSION = '0.08';
 
 =head2 new
 
@@ -152,6 +152,9 @@ sub extract {
     $self->{_ERR} = "No paramter for '$field'";
     return;
   } 
+
+  # 'False' values get returned as themselves with no warnings.
+  return $self->{value} unless $self->{value};
 
   my $handler = $module->_new($self);
   if (my $untaint_re = delete $param{'-taint_re'}) {
