@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-use Test::More tests => 19;
+use Test::More tests => 21;
 
 use strict;
 use CGI;
@@ -42,5 +42,13 @@ my %type = (
   my $hex = $h->extract(-as_hex => 'hex');
   ok !$hex, "Invalid hex";
   like $h->error, qr/does not untaint with default pattern/, $h->error;
+}
+
+{
+  my $data = {};
+  my $q = CGI->new($data);
+  ok my $h = CGI::Untaint->new( $q->Vars ), "Create an empty handler";
+  my $hex = $h->extract(-as_hex => 'hex');
+  ok !$hex, "No hex in it";
 }
 

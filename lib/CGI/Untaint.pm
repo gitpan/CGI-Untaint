@@ -1,7 +1,7 @@
 package CGI::Untaint;
 
 use vars qw/$VERSION/;
-$VERSION = '0.90';
+$VERSION = '1.00';
 
 =head1 NAME 
 
@@ -83,8 +83,6 @@ sub new {
   #  (%vals), (\%vals), (\%config, %vals) or (\%config, \%vals)
   #    but %vals could also be an object ...
   my ($vals, $config);
-
-	croak "Need some arguments" unless @_;
 
 	if (@_ == 1) {
 		# only one argument - must be either hashref or obj.

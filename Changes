@@ -1,5 +1,8 @@
 Revision history for Perl extension CGI::Untaint.
 
+1.0   August 6 2003
+				- handle case where $q->Vars is empty
+
 0.9   February 5, 2003
 				- handle Apache::Table better when we have no config hash
 					(thanks to domm)
