@@ -1,7 +1,7 @@
 package CGI::Untaint;
 
 use vars qw/$VERSION/;
-$VERSION = '1.20';
+$VERSION = '1.21';
 
 =head1 NAME 
 
@@ -56,6 +56,8 @@ use strict;
 use Carp;
 use UNIVERSAL::require;
 
+=head1 CONSTRUCTOR
+
 =head2 new
 
   my $handler  = CGI::Untaint->new( $q->Vars );
@@ -105,7 +107,7 @@ sub new {
 	bless $vals, $class;
 }
 
-sub error { $_[0]->{_ERR} }
+=head1 METHODS
 
 =head2 extract
 
@@ -209,9 +211,19 @@ sub extract {
 	return $self->{__lastval};
 }
 
+=head2 error
+
+	my $error = $handler->error;
+
+If the validation failed, this will return the reason why.
+
+=cut
+
+sub error { $_[0]->{_ERR} }
+
 sub _load_module {
 	my $self = shift;
-	my $name = $self->_get_module_name(shift ());
+	my $name = $self->_get_module_name(shift());
 	return $self->{__loaded}{$name} if defined $self->{__loaded}{$name};
 
 	eval { $name->require or die };
