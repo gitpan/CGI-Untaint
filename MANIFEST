@@ -4,8 +4,9 @@ lib/CGI/Untaint/hex.pm
 lib/CGI/Untaint/integer.pm
 lib/CGI/Untaint/object.pm
 lib/CGI/Untaint/printable.pm
-MANIFEST
 Makefile.PL
+MANIFEST
+META.yml			Module meta-data (added by MakeMaker)
 t/01.t
 t/apache.t
 t/mypath.t

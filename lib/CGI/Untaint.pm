@@ -1,7 +1,7 @@
 package CGI::Untaint;
 
 use vars qw/$VERSION/;
-$VERSION = '1.00';
+$VERSION = '1.20';
 
 =head1 NAME 
 
@@ -77,29 +77,32 @@ See L<LOCAL EXTRACTION HANDLERS>.
 =cut
 
 sub new {
-  my $class = shift;
+	my $class = shift;
 
-  # want to cope with any of:
-  #  (%vals), (\%vals), (\%config, %vals) or (\%config, \%vals)
-  #    but %vals could also be an object ...
-  my ($vals, $config);
+	# want to cope with any of:
+	#  (%vals), (\%vals), (\%config, %vals) or (\%config, \%vals)
+	#    but %vals could also be an object ...
+	my ($vals, $config);
 
 	if (@_ == 1) {
+
 		# only one argument - must be either hashref or obj.
-		$vals = ref $_[0] eq "HASH" ? shift : { %{+shift} }
+		$vals = ref $_[0] eq "HASH" ? shift: { %{ +shift } }
 
 	} elsif (@_ > 2) {
+
 		# Conf + Hash or Hash
 		$config = shift if ref $_[0] eq "HASH";
-		$vals={ @_ }
+		$vals   = {@_}
 
 	} else {
+
 		# Conf + Hashref or 1 key hash
 		ref $_[0] eq "HASH" ? ($config, $vals) = @_ : $vals = {@_};
 	}
-		
-  $vals->{__config} = $config;
-  bless $vals, $class;
+
+	$vals->{__config} = $config;
+	bless $vals, $class;
 }
 
 sub error { $_[0]->{_ERR} }
@@ -125,109 +128,109 @@ which will perform the untainting but not the validation.
 =cut
 
 sub extract {
-  my $self = shift;
-  
-  my %param = @_;
+	my $self = shift;
 
-  #----------------------------------------------------------------------
-  # Make sure we have a valid data handler
-  #----------------------------------------------------------------------
-  my @as = grep /^-as_/, keys %param;
-  croak "No data handler type specified" unless @as;
-  croak "Multiple data handler types specified" unless @as == 1;
+	my %param = @_;
 
-  my $field = delete $param{$as[0]};
-  my $skip_valid = $as[0] =~ s/^(-as_)like_/$1/;
-  my $module = $self->_load_module($as[0]);
-  $self->{_ERR} = "";
+	#----------------------------------------------------------------------
+	# Make sure we have a valid data handler
+	#----------------------------------------------------------------------
+	my @as = grep /^-as_/, keys %param;
+	croak "No data handler type specified"        unless @as;
+	croak "Multiple data handler types specified" unless @as == 1;
 
-  unless (defined $field) {
-    $self->{_ERR} = "Required value '$field' does not exist";
-    return;
-  } 
+	my $field      = delete $param{ $as[0] };
+	my $skip_valid = $as[0] =~ s/^(-as_)like_/$1/;
+	my $module     = $self->_load_module($as[0]);
+	$self->{_ERR} = "";
 
-  #----------------------------------------------------------------------
-  # Do we have a sensible value? Check the default untaint for this
-  # type of variable, unless one is passed.
-  #----------------------------------------------------------------------
-  $self->{value} = $self->{$field};
-  unless (defined $self->{value}) {
-    $self->{_ERR} = "No parameter for '$field'";
-    return;
-  } 
+	unless (defined $field) {
+		$self->{_ERR} = "Required value '$field' does not exist";
+		return;
+	}
 
-  # 'False' values get returned as themselves with no warnings.
-  return $self->{value} unless $self->{value};
+	#----------------------------------------------------------------------
+	# Do we have a sensible value? Check the default untaint for this
+	# type of variable, unless one is passed.
+	#----------------------------------------------------------------------
+	$self->{__lastval} = $self->{$field};
+	unless (defined $self->{__lastval}) {
+		$self->{_ERR} = "No parameter for '$field'";
+		return;
+	}
 
-  my $handler = $module->_new($self);
-  if (my $untaint_re = delete $param{'-taint_re'}) {
-    unless ($self->{value} =~ $untaint_re) {
-      $self->{_ERR} = 
-       "$field ($self->{value}) does not untaint with specified pattern";
-      return;
-    }
-  } else {
-    unless ($handler->_untaint) {
-      $self->{_ERR} = 
-       "$field ($self->{value}) does not untaint with default pattern";
-      return;
-    }
-  }
+	# 'False' values get returned as themselves with no warnings.
+	return $self->{__lastval} unless $self->{__lastval};
 
-  #----------------------------------------------------------------------
-  # Are we doing a validation check?
-  #----------------------------------------------------------------------
-  unless ($skip_valid) {
-    if (my $ref = $handler->can('is_valid')) {
-      unless ($handler->$ref()) {
-        $self->{_ERR} =
-         "$field ($self->{value}) does not pass the is_valid() check";
-        return;
-      }
-    }
-  }
+	my $handler = $module->_new($self);
+	if (my $untaint_re = delete $param{'-taint_re'}) {
+		unless ($self->{__lastval} =~ $untaint_re) {
+			$self->{_ERR} =
+				"$field ($self->{__lastval}) does not untaint with specified pattern";
+			return;
+		}
+	} else {
+		unless ($handler->_untaint) {
+			$self->{_ERR} =
+				"$field ($self->{__lastval}) does not untaint with default pattern";
+			return;
+		}
+	}
 
-  #----------------------------------------------------------------------
-  # Check any others. This is from an old version, and is deprecated
-  # in favour of is_valid().
-  # This may go away, or change dramatically in later versions.
-  #----------------------------------------------------------------------
-  foreach my $key (map { substr $_, 1} keys %param) {
-    my $value = $param{"-$key"};
-    unless ($handler->can($key)) {
-      $self->{_ERR} = "Handler for $field cannot test $key";
-      return;
-    }
-    unless ($handler->$key($value)) {
-      $self->{_ERR} ||= "Handler for $field failed test for $key";
-      return;
-    }
-  }
-  return $self->{value};
+	#----------------------------------------------------------------------
+	# Are we doing a validation check?
+	#----------------------------------------------------------------------
+	unless ($skip_valid) {
+		if (my $ref = $handler->can('is_valid')) {
+			unless ($handler->$ref()) {
+				$self->{_ERR} =
+					"$field ($self->{__lastval}) does not pass the is_valid() check";
+				return;
+			}
+		}
+	}
+
+	#----------------------------------------------------------------------
+	# Check any others. This is from an old version, and is deprecated
+	# in favour of is_valid().
+	# This may go away, or change dramatically in later versions.
+	#----------------------------------------------------------------------
+	foreach my $key (map { substr $_, 1 } keys %param) {
+		my $value = $param{"-$key"};
+		unless ($handler->can($key)) {
+			$self->{_ERR} = "Handler for $field cannot test $key";
+			return;
+		}
+		unless ($handler->$key($value)) {
+			$self->{_ERR} ||= "Handler for $field failed test for $key";
+			return;
+		}
+	}
+	return $self->{__lastval};
 }
 
 sub _load_module {
-  my $self = shift;
-  my $name = $self->_get_module_name(shift());
-  return $self->{__loaded}{$name} if defined $self->{__loaded}{$name};
+	my $self = shift;
+	my $name = $self->_get_module_name(shift ());
+	return $self->{__loaded}{$name} if defined $self->{__loaded}{$name};
 
-  eval { $name->require or die };
-  return $self->{__loaded}{$name} = $name unless $@;
+	eval { $name->require or die };
+	return $self->{__loaded}{$name} = $name unless $@;
 
-  # Do we have an alternate path?
-  my $path = $self->{__config}{INCLUDE_PATH} or die $@;
-     $path =~ s/\//::/g;
-     $path =~ s/^:://;
-  my $new_name = "$path\::$name";
-  $new_name->require;
-  return $self->{__loaded}{$name} = $new_name;
+	# Do we have an alternate path?
+	my $path = $self->{__config}{INCLUDE_PATH} or die $@;
+	$path =~ s/\//::/g;
+	$path =~ s/^:://;
+	my $new_name = "$path\::$name";
+	$new_name->require;
+	return $self->{__loaded}{$name} = $new_name;
 }
 
 # Convert the -as_whatever to a FQ module name
 sub _get_module_name {
-  my $self = shift;
-  (my $handler = shift) =~ s/^-as_//;
-  return join "::", ref($self), $handler;
+	my $self = shift;
+	(my $handler = shift) =~ s/^-as_//;
+	return join "::", ref($self), $handler;
 }
 
 =head1 LOCAL EXTRACTION HANDLERS
@@ -287,16 +290,19 @@ This package comes with the following simplistic handlers:
 To really make this work for you you either need to write, or download
 from CPAN, other handlers. Currently available handlers from CPAN include:
 
-  CGI::Untaint::creditcard
-  CGI::Untaint::date
-  CGI::Untaint::email
-  CGI::Untaint::isbn
-  CGI::Untaint::uk_postcode
-  CGI::Untaint::url
-
-If you create any others, please let me know and I'll include them here.
-(Or, if you have requests for other handlers, let me know and I'll see
-if I can create them).
+  asin         - an Amazon ID
+  boolean      - boolean value
+  creditcard   - a credit card number
+  date         - a date (into a Date::Simple)
+	datetime     - a date (into a DateTime)
+  email        - an email address
+  hostname     - a DNS host name
+  html         - sanitized HTML
+  ipaddress    - an IP address
+  isbn         - an ISBN
+  uk_postcode  - a UK Postcode
+  url          - a URL
+  zipcode      - a US zipcode
 
 =head1 BUGS
 
@@ -308,16 +314,16 @@ L<CGI>. L<perlsec>. L<Test::CGI::Untaint>.
 
 =head1 AUTHOR
 
-Tony Bowden, E<lt>kasei@tmtm.comE<gt>.
+Tony Bowden
 
-=head1 FEEDBACK
+=head1 BUGS and QUERIES
 
-I'd love to hear from you if you start using this. I'd particularly like
-to hear any suggestions as to how to make it even better / easier etc.
+Please direct all correspondence regarding this module to:
+  bug-CGI-Untaint@rt.cpan.org
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT and LICENSE
 
-Copyright (C) 2001-2003 Tony Bowden. All rights reserved.
+Copyright (C) 2001-2004 Tony Bowden. All rights reserved.
 
 This module is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

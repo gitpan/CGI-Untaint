@@ -6,7 +6,7 @@ use CGI::Untaint;
 
 use Test::More tests => 20;
 
-our $data = {
+my $data = {
 	name => "Tony Bowden",
 	age  => 110,
 };

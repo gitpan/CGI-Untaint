@@ -9,14 +9,14 @@ use CGI::Untaint;
 my $data = {
   name => "Tony Bowden",
   age  => 110,
-  neg  => -10,
+  value  => -10,
   hex  => "a15b",
 };
 
 my %type = (
   name => 'printable',
   age  => 'integer',
-  neg  => 'integer',
+  value  => 'integer',
   hex  => 'hex',
 );
 
@@ -25,9 +25,9 @@ my %type = (
   my $q = CGI->new($data);
   ok my $h = CGI::Untaint->new( $q->Vars ), "Create the handler";
   isa_ok $h, "CGI::Untaint";
-  foreach (keys %type) {
+  foreach (sort keys %type) {
     ok my $res = $h->extract("-as_$type{$_}" => $_), "Extract $_";
-    is $res,  $data->{$_}, " - Correct value";
+    is $res,  $data->{$_}, " - Correct value ($_ = $data->{$_})";
     is $h->error, '', "No error";
   }
   my $foo = $h->extract(-as_printable => 'foo');

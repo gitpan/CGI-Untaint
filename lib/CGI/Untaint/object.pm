@@ -50,23 +50,23 @@ it under the same terms as Perl itself.
 
 use strict;
 
-sub _new  { bless { _obj => $_[1]}, $_[0] }
+sub _new { bless { _obj => $_[1] }, $_[0] }
 
-sub value { 
-  my $self = shift;
-  $self->{_obj}->{value} = shift if @_;
-  $self->{_obj}->{value};
+sub value {
+	my $self = shift;
+	$self->{_obj}->{__lastval} = shift if @_;
+	$self->{_obj}->{__lastval};
 }
 
 sub _untaint {
-  my $self = shift;
-  my $re = $self->_untaint_re;
-  unless ($self->value and $self->value =~ $self->_untaint_re) {
-    $self->{_ERR} = "Untaint failed";
-    return;
-  }
-  $self->value($1);
-  return 1;
+	my $self = shift;
+	my $re   = $self->_untaint_re;
+	unless ($self->value and $self->value =~ $self->_untaint_re) {
+		$self->{_ERR} = "Untaint failed";
+		return;
+	}
+	$self->value($1);
+	return 1;
 }
 
 sub is_valid { 1 }

@@ -1,5 +1,11 @@
 Revision history for Perl extension CGI::Untaint.
 
+1.20  December 27 2004
+				- remove an 'our' for 5.005 compatability [Drew Taylor]
+
+1.1   August 26 2003
+				- don't clobber people's 'value' key
+
 1.0   August 6 2003
 				- handle case where $q->Vars is empty
 
