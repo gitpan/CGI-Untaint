@@ -16,55 +16,44 @@ CGI::Untaint::object - base class for Input Handlers
 
   sub is_valid {
     my $self = shift;
-    my $value = $self->value;
     return is_ok($self->value);
   }
 
   1;
-
-  # then...
-
-  my $handler = CGI::Untaint->new({
-    INCLUDE_PATH = 'MyUntaint',
-  }, $q->Vars );
-
-  my $bar = $handler->extract(-as_foo => 'field10');
 
 =head1 DESCRIPTION
 
 This is the base class that all Untaint objects should inherit
 from. 
 
-=head1 AUTHOR
-
-Tony Bowden, E<lt>kasei@tmtm.comE<gt>.
-
-=head1 COPYRIGHT
-
-Copyright (C) 2001 Tony Bowden. All rights reserved.
-
-This module is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
 =cut
 
 use strict;
 
-sub _new { bless { _obj => $_[1] }, $_[0] }
+sub _new {
+	my ($class, $h, $raw) = @_;
+	bless {
+		_obj   => $h,
+		_raw   => $raw,
+		_clean => undef,
+	} => $class;
+}
 
+sub untainted { shift->{_clean} }
+
+# This should really have been two methods, but too many other modules
+# now rely on the fact that this does double duty. As an accessor, this
+# is the 'raw' value. As a mutator it's the extracted one.
 sub value {
 	my $self = shift;
-	$self->{_obj}->{__lastval} = shift if @_;
-	$self->{_obj}->{__lastval};
+	$self->{_clean} = shift if defined $_[0];
+	$self->{_raw};
 }
 
 sub _untaint {
 	my $self = shift;
 	my $re   = $self->_untaint_re;
-	unless ($self->value and $self->value =~ $self->_untaint_re) {
-		$self->{_ERR} = "Untaint failed";
-		return;
-	}
+	die unless $self->value =~ $self->_untaint_re;
 	$self->value($1);
 	return 1;
 }

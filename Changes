@@ -1,23 +1,33 @@
 Revision history for Perl extension CGI::Untaint.
 
+1.24  December 27 2004
+        - Correctly handle false values [reported by Mark Fowler]
+
+1.23  December 27 2004
+        - fix INCLUDE_PATH bugs: it's a prefix, not a physical path on
+          disk
+
+1.22  December 27 2004
+        - store raw data in sub-hash, rather than direct in object
+
 1.21  December 27 2004
-				- document the error() method [Mark Fowler]
-				- allow 'printable' to include tabs [Dana Hudes]
+        - document the error() method [Mark Fowler]
+        - allow 'printable' to include tabs [Dana Hudes]
 
 1.20  December 27 2004
-				- remove an 'our' for 5.005 compatability [Drew Taylor]
+        - remove an 'our' for 5.005 compatability [Drew Taylor]
 
 1.1   August 26 2003
-				- don't clobber people's 'value' key
+        - don't clobber people's 'value' key
 
 1.0   August 6 2003
-				- handle case where $q->Vars is empty
+        - handle case where $q->Vars is empty
 
 0.9   February 5, 2003
-				- handle Apache::Table better when we have no config hash
-					(thanks to domm)
+        - handle Apache::Table better when we have no config hash
+          (thanks to domm)
         - better portability
-				- reference Test::CGI::Untaint
+        - reference Test::CGI::Untaint
 
 0.83  January 27, 2002
         - cope with UNIVERSAL::require API change
@@ -43,14 +53,14 @@ Revision history for Perl extension CGI::Untaint.
         - untainting now works properly
 
 0.05  August 23, 2001
-	      - added the ability to specify an INCLUDE_PATH
-	      - fixed bug in (undocumented) credit_card handler
-	      - added 'printable'
+        - added the ability to specify an INCLUDE_PATH
+        - fixed bug in (undocumented) credit_card handler
+        - added 'printable'
 
 0.02  August 22, 2001
-	      - added 'postcode'
+        - added 'postcode'
 
 0.01  June 2001
-	      - original version
+        - original version
 
 

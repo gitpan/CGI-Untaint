@@ -10,4 +10,5 @@ t/01.t
 t/apache.t
 t/mypath.t
 t/printable.t
+t/setval.t
 META.yml                                 Module meta-data (added by MakeMaker)

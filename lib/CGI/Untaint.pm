@@ -1,7 +1,7 @@
 package CGI::Untaint;
 
 use vars qw/$VERSION/;
-$VERSION = '1.21';
+$VERSION = '1.24';
 
 =head1 NAME 
 
@@ -14,7 +14,7 @@ CGI::Untaint - process CGI input parameters
   my $q = new CGI;
   my $handler = CGI::Untaint->new( $q->Vars );
   my $handler2 = CGI::Untaint->new({
-		INCLUDE_PATH => 'MyRecipes',
+		INCLUDE_PATH => 'My::Untaint',
 	}, $apr->parms);
 
   my $name     = $handler->extract(-as_printable => 'name');
@@ -62,7 +62,7 @@ use UNIVERSAL::require;
 
   my $handler  = CGI::Untaint->new( $q->Vars );
   my $handler2 = CGI::Untaint->new({
-		INCLUDE_PATH => 'MyRecipes',
+		INCLUDE_PATH => 'My::Untaint',
 	}, $apr->parms);
 
 The simplest way to contruct an input handler is to pass a hash of
@@ -103,8 +103,11 @@ sub new {
 		ref $_[0] eq "HASH" ? ($config, $vals) = @_ : $vals = {@_};
 	}
 
-	$vals->{__config} = $config;
-	bless $vals, $class;
+	bless {
+		__config => $config,
+		__data   => $vals,
+	} => $class;
+
 }
 
 =head1 METHODS
@@ -131,6 +134,17 @@ which will perform the untainting but not the validation.
 
 sub extract {
 	my $self = shift;
+	$self->{_ERR} = "";
+	my $val = eval { $self->_do_extract(@_) };
+	if ($@) {
+		chomp($self->{_ERR} = $@);
+		return;
+	}
+	return $val;
+}
+
+sub _do_extract {
+	my $self = shift;
 
 	my %param = @_;
 
@@ -144,39 +158,24 @@ sub extract {
 	my $field      = delete $param{ $as[0] };
 	my $skip_valid = $as[0] =~ s/^(-as_)like_/$1/;
 	my $module     = $self->_load_module($as[0]);
-	$self->{_ERR} = "";
-
-	unless (defined $field) {
-		$self->{_ERR} = "Required value '$field' does not exist";
-		return;
-	}
 
 	#----------------------------------------------------------------------
 	# Do we have a sensible value? Check the default untaint for this
 	# type of variable, unless one is passed.
 	#----------------------------------------------------------------------
-	$self->{__lastval} = $self->{$field};
-	unless (defined $self->{__lastval}) {
-		$self->{_ERR} = "No parameter for '$field'";
-		return;
-	}
+	defined(my $raw = $self->{__data}->{$field})
+		or die "No parameter for '$field'\n";
 
 	# 'False' values get returned as themselves with no warnings.
-	return $self->{__lastval} unless $self->{__lastval};
+	# return $self->{__lastval} unless $self->{__lastval};
 
-	my $handler = $module->_new($self);
-	if (my $untaint_re = delete $param{'-taint_re'}) {
-		unless ($self->{__lastval} =~ $untaint_re) {
-			$self->{_ERR} =
-				"$field ($self->{__lastval}) does not untaint with specified pattern";
-			return;
-		}
-	} else {
-		unless ($handler->_untaint) {
-			$self->{_ERR} =
-				"$field ($self->{__lastval}) does not untaint with default pattern";
-			return;
-		}
+	my $handler = $module->_new($self, $raw);
+
+	my $clean = eval { $handler->_untaint };
+	if ($@) {    # Give sensible death message
+		die "$field ($raw) does not untaint with default pattern\n"
+			if $@ =~ /^Died at/;
+		die $@;
 	}
 
 	#----------------------------------------------------------------------
@@ -184,31 +183,12 @@ sub extract {
 	#----------------------------------------------------------------------
 	unless ($skip_valid) {
 		if (my $ref = $handler->can('is_valid')) {
-			unless ($handler->$ref()) {
-				$self->{_ERR} =
-					"$field ($self->{__lastval}) does not pass the is_valid() check";
-				return;
-			}
+			die "$field ($raw) does not pass the is_valid() check\n"
+				unless $handler->$ref();
 		}
 	}
 
-	#----------------------------------------------------------------------
-	# Check any others. This is from an old version, and is deprecated
-	# in favour of is_valid().
-	# This may go away, or change dramatically in later versions.
-	#----------------------------------------------------------------------
-	foreach my $key (map { substr $_, 1 } keys %param) {
-		my $value = $param{"-$key"};
-		unless ($handler->can($key)) {
-			$self->{_ERR} = "Handler for $field cannot test $key";
-			return;
-		}
-		unless ($handler->$key($value)) {
-			$self->{_ERR} ||= "Handler for $field failed test for $key";
-			return;
-		}
-	}
-	return $self->{__lastval};
+	return $handler->untainted;
 }
 
 =head2 error
@@ -224,25 +204,26 @@ sub error { $_[0]->{_ERR} }
 sub _load_module {
 	my $self = shift;
 	my $name = $self->_get_module_name(shift());
-	return $self->{__loaded}{$name} if defined $self->{__loaded}{$name};
 
-	eval { $name->require or die };
-	return $self->{__loaded}{$name} = $name unless $@;
-
-	# Do we have an alternate path?
-	my $path = $self->{__config}{INCLUDE_PATH} or die $@;
-	$path =~ s/\//::/g;
-	$path =~ s/^:://;
-	my $new_name = "$path\::$name";
-	$new_name->require;
-	return $self->{__loaded}{$name} = $new_name;
+	foreach
+		my $prefix (grep defined, "CGI::Untaint", $self->{__config}{INCLUDE_PATH})
+	{
+		my $mod = "$prefix\::$name";
+		return $self->{__loaded}{$mod} if defined $self->{__loaded}{$mod};
+		eval {
+			$mod->require;
+			$mod->can('_untaint') or die;
+		};
+		return $self->{__loaded}{$mod} = $mod unless $@;
+	}
+	die "Can't find extraction handler for $name\n";
 }
 
 # Convert the -as_whatever to a FQ module name
 sub _get_module_name {
 	my $self = shift;
 	(my $handler = shift) =~ s/^-as_//;
-	return join "::", ref($self), $handler;
+	return $handler;
 }
 
 =head1 LOCAL EXTRACTION HANDLERS
@@ -255,20 +236,26 @@ will return the untainted value required.
 
 e.g. if you often extract single digit variables, you could create 
 
-  package Mysite::CGI::Untaint::digit;
+  package My::Untaint::digit;
+
   use base 'CGI::Untaint::object';
+
   sub _untaint_re { qr/^(\d)$/ }
+
   1;
 
-You should specify the path to 'Mysite' in the INCLUDE_PATH configuration
-option.  (See new() above.)
+You should specify the path 'My::Untaint' in the INCLUDE_PATH
+configuration option.  (See new() above.)
 
-When extract() is called CGI::Untaint will automatically check to see if
-you have an is_valid() method also, and if so will run this against the
-value extracted from the regular expression (available as $self->value).
+When extract() is called CGI::Untaint will also check to see if you have
+an is_valid() method also, and if so will run this against the value
+extracted from the regular expression (available as $self->value).
+
 If this returns a true value, then the extracted value will be returned,
-otherwise we return undef. (is_valid() can also modify the value being
-returned, by assigning to $self->value)
+otherwise we return undef. 
+
+is_valid() can also modify the value being returned, by assigning 
+  $self->value($new_value)
 
 e.g. in the above example, if you sometimes need to ensure that the
 digit extracted is prime, you would supply:
