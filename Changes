@@ -1,5 +1,8 @@
 Revision history for Perl extension CGI::Untaint.
 
+1.26  Tue Sep 20 22:13:21 UTC 2005
+        - allow 'printable' strings to be empty [Michael Reece]
+
 1.25  December 27 2004
         - add test to make sure that false values which don't pass the
           regex test are handled correctly [Mark Fowler]

@@ -1,7 +1,6 @@
 package CGI::Untaint;
 
-use vars qw/$VERSION/;
-$VERSION = '1.25';
+$VERSION = '1.26';
 
 =head1 NAME 
 
@@ -14,8 +13,8 @@ CGI::Untaint - process CGI input parameters
   my $q = new CGI;
   my $handler = CGI::Untaint->new( $q->Vars );
   my $handler2 = CGI::Untaint->new({
-		INCLUDE_PATH => 'My::Untaint',
-	}, $apr->parms);
+  	INCLUDE_PATH => 'My::Untaint',
+  }, $apr->parms);
 
   my $name     = $handler->extract(-as_printable => 'name');
   my $homepage = $handler->extract(-as_url => 'homepage');
@@ -62,8 +61,8 @@ use UNIVERSAL::require;
 
   my $handler  = CGI::Untaint->new( $q->Vars );
   my $handler2 = CGI::Untaint->new({
-		INCLUDE_PATH => 'My::Untaint',
-	}, $apr->parms);
+  	INCLUDE_PATH => 'My::Untaint',
+  }, $apr->parms);
 
 The simplest way to contruct an input handler is to pass a hash of
 parameters (usually $q->Vars) to new(). Each parameter will then be able
@@ -193,7 +192,7 @@ sub _do_extract {
 
 =head2 error
 
-	my $error = $handler->error;
+  my $error = $handler->error;
 
 If the validation failed, this will return the reason why.
 
@@ -287,13 +286,14 @@ This package comes with the following simplistic handlers:
   hex        - a hexadecimal number (as a string)
 
 To really make this work for you you either need to write, or download
-from CPAN, other handlers. Currently available handlers from CPAN include:
+from CPAN, other handlers. Some of the handlers available on CPAN include:
 
   asin         - an Amazon ID
   boolean      - boolean value
+  country      - a country code or name
   creditcard   - a credit card number
   date         - a date (into a Date::Simple)
-	datetime     - a date (into a DateTime)
+  datetime     - a date (into a DateTime)
   email        - an email address
   hostname     - a DNS host name
   html         - sanitized HTML
@@ -322,7 +322,7 @@ Please direct all correspondence regarding this module to:
 
 =head1 COPYRIGHT and LICENSE
 
-Copyright (C) 2001-2004 Tony Bowden. All rights reserved.
+Copyright (C) 2001-2005 Tony Bowden. All rights reserved.
 
 This module is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

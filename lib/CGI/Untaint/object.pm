@@ -39,11 +39,27 @@ sub _new {
 	} => $class;
 }
 
-sub untainted { shift->{_clean} }
+=head1 METHODS TO SUBCLASS
 
-# This should really have been two methods, but too many other modules
-# now rely on the fact that this does double duty. As an accessor, this
-# is the 'raw' value. As a mutator it's the extracted one.
+=head2 is_valid / _untaint_re
+
+Your subclass should either provide a regular expression in _untaint_re
+(and yes, I should really make this public), or an entire is_valid method.
+
+=cut
+
+sub is_valid { 1 }
+
+=head1 METHODS TO CALL
+
+=head2 value
+
+This should really have been two methods, but too many other modules
+now rely on the fact that this does double duty. As an accessor, this
+is the 'raw' value. As a mutator it's the extracted one.
+
+=cut
+
 sub value {
 	my $self = shift;
 	$self->{_clean} = shift if defined $_[0];
@@ -58,12 +74,23 @@ sub _untaint {
 	return 1;
 }
 
-sub is_valid { 1 }
+=head2 re_all / re_none
 
-# Return the entire thing, untainted. This should only be used if
-# you have already validated your entry in some way that means you
-# completely trust the data.
+Regular expressions to match anything, or nothing, untained.  These should
+only be used if you have already validated your entry in some way that
+means you completely trust the data.
+
+=cut
+
 sub re_all  { qr/(.*)/ }
 sub re_none { qr/(?!)/ }
+
+=head2 untainted
+
+Are we clean yet?
+
+=cut
+
+sub untainted { shift->{_clean} }
 
 1;
